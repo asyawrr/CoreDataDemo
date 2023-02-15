@@ -21,13 +21,21 @@ class TaskListViewController: UITableViewController {
         super.viewDidLoad()
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
-        
+        storage.fetchData(completion: { [weak self] tasks in
+            guard let self = self else { return }
+            
+            if let tasks = tasks {
+                self.taskList = tasks
+                self.tableView.reloadData()
+            } else  {
+                print("Fetch error")
+            }
+        })
         setupNavigationBar()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        taskList = storage.fetchData() ?? []
         tableView.reloadData()
     }
 
@@ -63,7 +71,7 @@ class TaskListViewController: UITableViewController {
     }
     
     @objc private func addNewTask() {
-        showAlert(mode: .create) { task in
+        showAlert(mode: .create) { _ in
             self.tableView.reloadData()
         }
     }
@@ -92,21 +100,16 @@ extension TaskListViewController {
         return cell
     }
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
         let task = taskList[indexPath.row]
         
         showAlert(task: task, mode: .edit) { task in
             tableView.reloadRows(at: [indexPath], with: .automatic)
         }
-//        showAlert(task: task) { task in
-//            tableView.reloadRows(at: [indexPath], with: .automatic)
-//        }
+
     }
 
 // MARK: - editing elements methods
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        true
-    }
-    
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let task = taskList.remove(at: indexPath.row)
@@ -119,13 +122,11 @@ extension TaskListViewController {
 // MARK: - alert setup
 
 extension TaskListViewController {
-//    private func showAlert(task: Task? = nil, completion: ((Task) -> Void)? = nil) {
     func showAlert(task: Task? = nil, mode: Mode? = nil, completion: @escaping (Task) -> Void) {
         
-        let alert = UIAlertController.createAlertController(task: task, mode: mode ?? .edit, completion: completion)
-//        let alert = UIAlertController(title: mode.title, message: "What needed to-do?", preferredStyle: .alert)
+        let alert = UIAlertController.createAlertController(task: task, mode: mode ?? .edit)
         
-        alert.action(task: task, mode: mode) { [ unowned self ] taskName in
+        alert.action(task: task, mode: mode) { [unowned self] taskName in
             if let task = task {
                 storage.edit(task: task, newName: taskName)
                 completion(task)
@@ -136,23 +137,4 @@ extension TaskListViewController {
             
         present(alert, animated: true)
     }
-//        var alertTitle: String
-//
-//        if task != nil {
-//            alertTitle = "Edit Task"
-//        } else {
-//            alertTitle = "Create Task"
-//        }
-//        let alert = UIAlertController(title: alertTitle, message: "What needed to-do?", preferredStyle: .alert)
-//
-//        alert.action(task: task) { [unowned self] taskName in
-//            if let task = task, let completion = completion {
-//                storage.edit(task: task, newName: taskName)
-//                completion(task)
-//            } else {
-//                self.save(taskName)
-//            }
-//        }
-//        present(alert, animated: true)
-//    }
 }

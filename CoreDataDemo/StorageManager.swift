@@ -25,6 +25,10 @@ class StorageManager {
     }()
     
     private let viewContext: NSManagedObjectContext
+    
+    private init() {
+        viewContext = persistentContainer.viewContext
+    }
 
     func saveContext () {
         if viewContext.hasChanges {
@@ -37,22 +41,21 @@ class StorageManager {
         }
     }
     
-    func fetchData() -> [Task]? {
+    func fetchData(completion: @escaping ([Task]?) -> Void) {
         var taskList = [Task]()
         
         let fetchRequest = Task.fetchRequest()
         
-        do {
-            taskList = try viewContext.fetch(fetchRequest)
-        } catch let error as NSError {
-            print("Could not fetch. \(error), \(error.userInfo)")
+        viewContext.perform { [unowned self] in
+            do {
+                taskList = try viewContext.fetch(fetchRequest)
+                completion(taskList)
+            } catch let error as NSError {
+                print("Could not fetch. \(error), \(error.userInfo)")
+                completion(nil)
+            }
         }
-        
-        return taskList
-    }
-        
-    init() {
-        viewContext = persistentContainer.viewContext
+         
     }
     
     //MARK: - create, delete, edit
@@ -65,9 +68,7 @@ class StorageManager {
     }
     
     func delete(task: Task) {
-        if fetchData() != nil {
-            viewContext.delete(task)
-        }
+        viewContext.delete(task)
         saveContext()
     }
     
