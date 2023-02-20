@@ -17,9 +17,9 @@ extension UIAlertController {
         return alertController
     }
     
-    func action(task: Task?, mode: Mode?, completion: @escaping (String) -> Void) {
+    func action(task: Task?, mode: Mode, completion: @escaping (String) -> Void) {
         
-        let saveAction = UIAlertAction(title: mode?.actionTitle, style: .default) { nameToSave in
+        let saveAction = UIAlertAction(title: mode.actionTitle, style: .default) { nameToSave in
             guard let nameToSave = self.textFields?.first?.text else { return }
             guard !nameToSave.isEmpty else { return }
             completion(nameToSave)

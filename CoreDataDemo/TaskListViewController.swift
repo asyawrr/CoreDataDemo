@@ -71,7 +71,7 @@ class TaskListViewController: UITableViewController {
     }
     
     @objc private func addNewTask() {
-        showAlert(mode: .create) { _ in
+        showAlert(mode: .create) {
             self.tableView.reloadData()
         }
     }
@@ -103,7 +103,7 @@ extension TaskListViewController {
         tableView.deselectRow(at: indexPath, animated: true)
         let task = taskList[indexPath.row]
         
-        showAlert(task: task, mode: .edit) { task in
+        showAlert(task: task, mode: .edit) {
             tableView.reloadRows(at: [indexPath], with: .automatic)
         }
 
@@ -122,14 +122,14 @@ extension TaskListViewController {
 // MARK: - alert setup
 
 extension TaskListViewController {
-    func showAlert(task: Task? = nil, mode: Mode? = nil, completion: @escaping (Task) -> Void) {
+    func showAlert(task: Task? = nil, mode: Mode, completion: @escaping () -> Void) {
         
-        let alert = UIAlertController.createAlertController(task: task, mode: mode ?? .edit)
+        let alert = UIAlertController.createAlertController(task: task, mode: mode)
         
         alert.action(task: task, mode: mode) { [unowned self] taskName in
             if let task = task {
                 storage.edit(task: task, newName: taskName)
-                completion(task)
+                completion()
             } else {
                 self.save(taskName)
             }
